@@ -19,31 +19,88 @@ export const scheduleMaintenanceSchema = z.object({
 });
 
 export async function checkMachineHealthLogic(input: any) {
+  const machineId = input?.machineId || 'ROBOT-ARM-02';
+  const isCritical = machineId === 'ROBOT-ARM-02';
+  const healthScore = isCritical ? 42 : 94;
+  const status = isCritical ? 'CRITICAL' : 'HEALTHY';
+
   return {
     success: true,
     timestamp: new Date().toISOString(),
-    machineId: input?.machineId || 'ALL',
-    status: 'HEALTHY',
-    telemetry: { temp: 42.5, vibration: 1.2, healthScore: 94 },
+    machineId,
+    status,
+    healthScore,
+    telemetry: {
+      temperature: isCritical ? 89.1 : 42.5,
+      vibration: isCritical ? 8.9 : 1.2,
+      noiseLevel: isCritical ? 94.0 : 68.5,
+    },
+    // NitroStack UI Widget Payload
+    _meta: {
+      widget: {
+        type: 'machine-health-gauge',
+        title: `Machine Health: ${machineId}`,
+        status,
+        score: healthScore,
+        gaugeColor: isCritical ? '#ef4444' : '#22c55e',
+        metrics: [
+          { label: 'Temperature', value: `${isCritical ? 89.1 : 42.5} °C`, alert: isCritical },
+          { label: 'Vibration', value: `${isCritical ? 8.9 : 1.2} mm/s`, alert: isCritical },
+          { label: 'Noise Level', value: `${isCritical ? 94.0 : 68.5} dB`, alert: false },
+        ],
+      },
+    },
   };
 }
 
 export async function predictFailureLogic(input: any) {
+  const machineId = input?.machineId || 'ROBOT-ARM-02';
+  const isCritical = machineId === 'ROBOT-ARM-02';
+
   return {
     success: true,
-    machineId: input?.machineId,
-    failureProbability: input?.machineId === 'ROBOT-ARM-02' ? 89 : 15,
-    riskSeverity: input?.machineId === 'ROBOT-ARM-02' ? 'CRITICAL' : 'LOW',
-    predictedComponentFailure: 'Servo Joint #3 Bearing Burnout',
+    machineId,
+    failureProbability: isCritical ? 89 : 12,
+    riskSeverity: isCritical ? 'CRITICAL' : 'LOW',
+    estimatedHoursToFailure: isCritical ? 12 : 240,
+    predictedComponentFailure: isCritical ? 'Servo Joint #3 Bearing Burnout' : 'Nominal wear',
+    recommendedAction: isCritical ? 'IMMEDIATE EMERGENCY MAINTENANCE & BEARING REPLACEMENT' : 'Routine check',
+    // NitroStack UI Widget Payload
+    _meta: {
+      widget: {
+        type: 'failure-risk-card',
+        title: `Predictive Diagnostic: ${machineId}`,
+        severity: isCritical ? 'CRITICAL' : 'LOW',
+        probability: isCritical ? '89%' : '12%',
+        component: isCritical ? 'Servo Joint #3 Bearing' : 'Standard Spindle',
+        downtimeCostImpact: isCritical ? '$45,000 / hr' : '$500 / hr',
+        actionRequired: isCritical ? 'Halt Arm & Swap Bearing' : 'Continue Monitoring',
+      },
+    },
   };
 }
 
 export async function scheduleMaintenanceLogic(input: any) {
+  const workOrderId = `WO-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
   return {
     success: true,
-    workOrderId: `WO-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+    workOrderId,
     machineId: input?.machineId,
+    maintenanceType: input?.maintenanceType || 'EMERGENCY',
     status: 'SCHEDULED',
+    // NitroStack UI Widget Payload
+    _meta: {
+      widget: {
+        type: 'work-order-ticket',
+        title: `Work Order Ticket: ${workOrderId}`,
+        machineId: input?.machineId,
+        priority: input?.priority || 'CRITICAL',
+        assignedTechnician: input?.assignedTechnician || 'Alex Vance',
+        requiredParts: ['Servo Joint Pack #3', 'High-Temp Synthetic Grease'],
+        scheduledDate: input?.scheduledDate || new Date().toISOString(),
+      },
+    },
   };
 }
 
