@@ -14,9 +14,9 @@
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
-    "typescript": "^5.3.3",
-    "tsx": "^4.7.0"
+    "@types/node": "^20.19.43",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
   },
   "nitrostack": {
     "skillsVersion": "1.0.0"
