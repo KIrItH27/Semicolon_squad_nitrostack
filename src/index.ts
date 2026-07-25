@@ -1,6 +1,7 @@
 // Add at the top of src/index.ts (Line 1):
 declare const process: any;
 import { createServer, Tool, z } from '@nitrostack/core';
+<<<<<<< HEAD
 import {
   checkMachineHealthLogic, checkMachineHealthSchema,
   predictFailureLogic, predictFailureSchema,
@@ -10,6 +11,9 @@ import {
   checkComplianceEventLogic, checkComplianceEventSchema,
   escalateIncidentLogic, escalateIncidentSchema
 } from './safety.tools.js';
+=======
+import { inspectBatchTool, flagDefectTool, rootCauseAnalysisTool } from './quality-tools.js';
+>>>>>>> e941ac10e0ff2c32ba40599d1d2e2773e721e575
 
 const server = createServer({
   name: 'Final_Semicolon_Squad',
@@ -24,14 +28,21 @@ server.tool(
     description: 'Say hello to someone',
     inputSchema: z.object({
       name: z.string().describe('The name to greet'),
+<<<<<<< HEAD
     }) as any,
     handler: async (input: any, context: any) => {
       context?.logger?.info?.(`Greeting ${input.name}`);
+=======
+    }),
+    handler: async (input: { name: string }, context) => {
+      context.logger.info(`Greeting ${input.name}`);
+>>>>>>> e941ac10e0ff2c32ba40599d1d2e2773e721e575
       return `Hello, ${input.name}! 👋`;
     },
   })
 );
 
+<<<<<<< HEAD
 // PERSON B: MAINTENANCE TOOLS
 server.tool(
   new Tool({
@@ -88,6 +99,11 @@ server.tool(
     },
   })
 );
+=======
+server.tool(inspectBatchTool);
+server.tool(flagDefectTool);
+server.tool(rootCauseAnalysisTool);
+>>>>>>> e941ac10e0ff2c32ba40599d1d2e2773e721e575
 
 server.start().catch((error) => {
   console.error('Failed to start server:', error);
