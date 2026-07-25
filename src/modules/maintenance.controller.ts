@@ -12,11 +12,11 @@ import {
 } from '../maintenance.tools.js';
 
 export const checkMachineHealthSchema = z.object({
-  machineId: z.string().optional().describe('Machine ID (e.g. "CNC-01", "PRESS-04"). Omit for all.'),
+  machineId: z.string().optional().describe('Machine ID (e.g. "CNC-01", "PRESS-04", "MCH-212"). Omit for all.'),
 });
 
 export const predictFailureSchema = z.object({
-  machineId: z.string().describe('Target machine ID.'),
+  machineId: z.string().describe('Target machine ID (e.g. "MCH-212").'),
   timeframeHours: z.number().optional().default(72),
 });
 
@@ -43,6 +43,15 @@ export class MaintenanceController {
   }
 
   @Tool({
+    name: 'checkMachineHealth',
+    description: 'Alias for check_machine_health.',
+    inputSchema: checkMachineHealthSchema,
+  })
+  async checkMachineHealthAlias(input: any, ctx: ExecutionContext) {
+    return this.checkMachineHealth(input, ctx);
+  }
+
+  @Tool({
     name: 'predict_failure',
     description: 'Predicts failure probability and component risks for plant equipment.',
     inputSchema: predictFailureSchema,
@@ -53,6 +62,15 @@ export class MaintenanceController {
   }
 
   @Tool({
+    name: 'predictFailure',
+    description: 'Alias for predict_failure.',
+    inputSchema: predictFailureSchema,
+  })
+  async predictFailureAlias(input: any, ctx: ExecutionContext) {
+    return this.predictFailure(input, ctx);
+  }
+
+  @Tool({
     name: 'schedule_maintenance',
     description: 'Schedules maintenance work orders and dispatches detailed email notifications to technicians.',
     inputSchema: scheduleMaintenanceSchema,
@@ -60,5 +78,14 @@ export class MaintenanceController {
   async scheduleMaintenance(input: any, ctx: ExecutionContext) {
     ctx.logger.info(`Scheduling maintenance work order for machine: ${input?.machineId}`);
     return scheduleMaintenanceLogic(input);
+  }
+
+  @Tool({
+    name: 'scheduleMaintenance',
+    description: 'Alias for schedule_maintenance.',
+    inputSchema: scheduleMaintenanceSchema,
+  })
+  async scheduleMaintenanceAlias(input: any, ctx: ExecutionContext) {
+    return this.scheduleMaintenance(input, ctx);
   }
 }

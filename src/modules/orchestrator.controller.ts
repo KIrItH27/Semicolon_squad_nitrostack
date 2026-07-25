@@ -8,33 +8,42 @@ import {
 export class OrchestratorController {
   @Prompt({
     name: 'run_factory_supervisor',
-    description: 'Master orchestrator for inventory checks, procurement, and ordering.',
+    description: 'Master orchestrator prompt for evaluating inventory, procurement, machinery health, and safety protocols.',
     arguments: [
-      { name: 'itemName', description: 'The item to evaluate', required: true }
+      { name: 'itemName', description: 'The inventory item to evaluate', required: false },
+      { name: 'machineId', description: 'The machine ID to evaluate', required: false },
+      { name: 'zoneId', description: 'The safety zone ID to audit', required: false },
     ],
   })
   async getSupervisorPrompt(args: Record<string, any>, ctx: ExecutionContext) {
-    const itemName = args.itemName;
+    const itemName = args.itemName || 'Milk';
+    const machineId = args.machineId || 'MCH-212';
+    const zoneId = args.zoneId || 'ZONE-C-WELDING';
+
     return [
       {
         role: 'user' as const,
-        content: `You are the Master Orchestrator Agent. Evaluate our inventory for: ${itemName}.
+        content: `You are the FactoryMind Master Orchestrator Agent supervising Inventory, Procurement, Plant Maintenance, and Safety Compliance.
 
-STEP 1: INVENTORY CHECK
-- Call 'check_stock' to find current quantity of ${itemName}.
-- If quantity is 5 or greater: Output "Stock levels are optimal." and stop.
-- If quantity is less than 5: Proceed to Step 2.
+=== PHASE 1: INVENTORY & PROCUREMENT ORCHESTRATION ===
+- Target Item: ${itemName}
+1. Call 'check_stock' to evaluate current stock level of ${itemName}.
+2. If stock is below 5 units, call 'find_supplier' to search available options.
+3. Select the best supplier and call 'place_order' to restock up to 10 units.
 
-STEP 2: PROCUREMENT ANALYSIS
-- Call 'find_supplier' to search the catalog for ${itemName}.
-- Select the most cost-effective supplier.
+=== PHASE 2: MACHINERY HEALTH & DISPATCH ORCHESTRATION ===
+- Target Machine: ${machineId}
+1. Call 'check_machine_health' or 'checkMachineHealth' for ${machineId}.
+2. Call 'predict_failure' or 'predictFailure' for ${machineId}.
+3. If health score is low (< 50) or failure risk is high, call 'schedule_maintenance' or 'scheduleMaintenance' to dispatch an emergency work order email.
 
-STEP 3: EXECUTE ORDER
-- Calculate the amount needed to bring stock up to 10.
-- Call 'place_order' using the supplier, item name, quantity, and total cost.
+=== PHASE 3: SAFETY & COMPLIANCE ORCHESTRATION ===
+- Target Zone: ${zoneId}
+1. Call 'check_compliance_event' or 'checkComplianceEvent' for ${zoneId}.
+2. If critical hazards are detected, call 'escalate_incident' or 'escalateIncident' to activate emergency response protocols.
 
-STEP 4: FINAL REPORT
-- Output an invoice summarizing starting stock, supplier, quantity ordered, and cost.`
+=== FINAL EXECUTIVE REPORT ===
+Output a consolidated operational report summarizing Inventory Status, Maintenance Actions Dispatched, and Safety Audit Results.`
       }
     ];
   }

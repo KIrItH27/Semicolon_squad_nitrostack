@@ -5,7 +5,7 @@ import { AppModule } from './modules/app.module.js';
 @McpApp({
   module: AppModule,
   server: {
-    name: 'smart-inventory-supervisor',
+    name: 'Final_Semicolon_Squad',
     version: '1.0.0',
   },
   transport: {
@@ -22,7 +22,10 @@ export class AppRoot {}
 async function bootstrap() {
   const app = await McpApplicationFactory.create(AppRoot);
   await app.start();
-  console.error('Smart Inventory & Maintenance Server started successfully on port 3000!');
+  console.error('FactoryMind Server started successfully on port 3000!');
 }
 
-bootstrap().catch(console.error);
+bootstrap().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
