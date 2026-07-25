@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types" : ["node"],
     "target": "ES2022",
     "module": "commonjs",
     "outDir": "./dist",
@@ -7,7 +8,9 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src/**/*"

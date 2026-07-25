@@ -1,26 +1,28 @@
-import { createServer, Tool, z } from '@nitrostack/core';
+import 'dotenv/config';
+import { McpApp, McpApplicationFactory } from '@nitrostack/core';
+import { AppModule } from './modules/app.module.js';
 
-const server = createServer({
-  name: 'Final_Semicolon_Squad',
-  version: '1.0.0',
-  description: 'Factory Mind',
-});
-
-server.tool(
-  new Tool({
-    name: 'hello',
-    description: 'Say hello to someone',
-    inputSchema: z.object({
-      name: z.string().describe('The name to greet'),
-    }),
-    handler: async (input, context) => {
-      context.logger.info(`Greeting ${input.name}`);
-      return `Hello, ${input.name}! 👋`;
+@McpApp({
+  module: AppModule,
+  server: {
+    name: 'smart-inventory-supervisor',
+    version: '1.0.0',
+  },
+  transport: {
+    type: 'http',
+    http: {
+      port: 3000,
+      host: '0.0.0.0',
+      basePath: '/mcp',
     },
-  })
-);
+  },
+})
+export class AppRoot {}
 
-server.start().catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+async function bootstrap() {
+  const app = await McpApplicationFactory.create(AppRoot);
+  await app.start();
+  console.error('Smart Inventory Server started successfully on port 3000!');
+}
+
+bootstrap().catch(console.error);
