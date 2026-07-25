@@ -37,15 +37,6 @@ export class SafetyController {
   }
 
   @Tool({
-    name: 'checkComplianceEvent',
-    description: 'Alias for check_compliance_event.',
-    inputSchema: checkComplianceEventSchema,
-  })
-  async checkComplianceEventAlias(input: any, ctx: ExecutionContext) {
-    return this.checkComplianceEvent(input, ctx);
-  }
-
-  @Tool({
     name: 'escalate_incident',
     description: 'Escalates safety incidents and triggers automated emergency response protocols.',
     inputSchema: escalateIncidentSchema,
@@ -53,14 +44,5 @@ export class SafetyController {
   async escalateIncident(input: any, ctx: ExecutionContext) {
     ctx.logger.info(`Escalating safety incident in zone: ${input?.zoneId}`);
     return escalateIncidentLogic(input);
-  }
-
-  @Tool({
-    name: 'escalateIncident',
-    description: 'Alias for escalate_incident.',
-    inputSchema: escalateIncidentSchema,
-  })
-  async escalateIncidentAlias(input: any, ctx: ExecutionContext) {
-    return this.escalateIncident(input, ctx);
   }
 }
