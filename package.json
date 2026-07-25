@@ -11,14 +11,16 @@
   },
   "dependencies": {
     "@nitrostack/core": "^1.0.14",
-    "dotenv": "^16.3.1",
-    "nodemailer": "^9.0.3",
-    "zod": "^4.4.3"
+    "@supabase/supabase-js": "^2.110.8",
+    "dotenv": "^16.6.1",
+    "nodemailer": "^6.9.16",
+    "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
+    "@types/node": "^20.19.43",
+    "@types/nodemailer": "^6.4.17",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.7.2"
   },
   "nitrostack": {
     "skillsVersion": "1.0.0"

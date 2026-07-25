@@ -1,9 +1,1 @@
-import { MaintenanceTools } from './maintenance.tools';
-import { SafetyTools } from './safety.tools';
-
-export class AppModule {
-  static providers = [
-    MaintenanceTools,
-    SafetyTools,
-  ];
-}
+export { AppModule } from './modules/app.module.js';
