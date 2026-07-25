@@ -1,3 +1,4 @@
+import { supabase } from '../db/supabase.js';
 import { z } from '@nitrostack/core';
 import { defineTool } from './define-tool.js';
 

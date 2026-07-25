@@ -1,5 +1,6 @@
 import { createServer, Tool, z } from '@nitrostack/core';
 import { personCTools } from './tools/index.js';
+const process = (globalThis as any).process;
 
 const server = createServer({
   name: 'Final_Semicolon_Squad',
@@ -14,8 +15,8 @@ server.tool(
     inputSchema: z.object({
       name: z.string().describe('The name to greet'),
     }),
-    handler: async (input: { name: string }, context) => {
-      context.logger.info(`Greeting ${input.name}`);
+     handler: async (input: { name: string }, context) => {
+     context.logger.info(`Greeting ${input.name}`);
       return `Hello, ${input.name}! 👋`;
     },
   })

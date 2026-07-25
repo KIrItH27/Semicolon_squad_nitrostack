@@ -1,3 +1,4 @@
+import { supabase } from '../db/supabase.js';
 import { z } from '@nitrostack/core';
 import { defineTool } from './define-tool.js';
 
@@ -53,9 +54,21 @@ const mockProductionLines: Record<
   },
 };
 
+export interface ProductionLineRow {
+  line_id: string;
+  line_name: string;
+  plant_location: string;
+  operational_status: string;
+  target_units_per_hour: number;
+  actual_units_per_hour: number;
+  oee_percentage: number;
+  shift_leader_id: string | null;
+  updated_at: string;
+}
+
 /**
  * getProductionStatus
- * Returns line speed, batch targets, units produced, and current bottlenecks.
+ * Returns line speed, batch targets, units produced, and current bottlenecks directly from Supabase DB.
  */
 export const getProductionStatus = defineTool({
   name: 'getProductionStatus',
@@ -67,61 +80,76 @@ export const getProductionStatus = defineTool({
       .describe('Optional production line ID (e.g., "LINE-A1", "LINE-B2"). If omitted, returns status for all active lines.'),
   }),
   execute: async ({ lineId }: { lineId?: string }) => {
+    let query = supabase.from('production_lines').select('*');
     if (lineId) {
-      const line = mockProductionLines[lineId.toUpperCase()];
-      if (!line) {
-        return {
-          success: false,
-          error: `Production line "${lineId}" not found. Available lines: ${Object.keys(mockProductionLines).join(', ')}`,
-        };
-      }
+      query = query.eq('line_id', lineId.toUpperCase());
+    }
+
+    const { data: dbRows, error } = await query;
+
+    if (error) {
+      console.error('❌ Supabase Production Lines Fetch Error:', error.message);
       return {
-        success: true,
-        timestamp: new Date().toISOString(),
-        data: {
-          ...line,
-          completionPercentage: Number(((line.unitsProduced / line.batchTarget) * 100).toFixed(1)),
-          remainingUnits: Math.max(0, line.batchTarget - line.unitsProduced),
-        },
+        success: false,
+        error: error.message,
       };
     }
 
-    const lines = Object.values(mockProductionLines).map((line) => ({
-      ...line,
-      completionPercentage: Number(((line.unitsProduced / line.batchTarget) * 100).toFixed(1)),
-      remainingUnits: Math.max(0, line.batchTarget - line.unitsProduced),
+    const rows: ProductionLineRow[] = dbRows || [];
+
+    if (lineId && rows.length === 0) {
+      return {
+        success: false,
+        error: `Production line "${lineId}" not found in database.`,
+      };
+    }
+
+    const formattedLines = rows.map((row) => ({
+      lineId: row.line_id,
+      lineName: row.line_name,
+      plantLocation: row.plant_location,
+      operationalStatus: row.operational_status,
+      targetUnitsPerHour: Number(row.target_units_per_hour),
+      actualUnitsPerHour: Number(row.actual_units_per_hour),
+      oeePercentage: Number(row.oee_percentage),
+      shiftLeaderId: row.shift_leader_id,
+      updatedAt: row.updated_at,
     }));
 
-    const totalTarget = lines.reduce((acc, l) => acc + l.batchTarget, 0);
-    const totalProduced = lines.reduce((acc, l) => acc + l.unitsProduced, 0);
-    const activeBottlenecks = lines.flatMap((l) => l.bottlenecks.map((b) => `[${l.lineId}] ${b}`));
+    if (lineId) {
+      return {
+        success: true,
+        timestamp: new Date().toISOString(),
+        data: formattedLines[0],
+      };
+    }
+
+    const totalTarget = formattedLines.reduce((acc, l) => acc + l.targetUnitsPerHour, 0);
+    const totalActual = formattedLines.reduce((acc, l) => acc + l.actualUnitsPerHour, 0);
 
     return {
       success: true,
       timestamp: new Date().toISOString(),
       summary: {
-        totalLines: lines.length,
-        runningLines: lines.filter((l) => l.status === 'RUNNING').length,
-        degradedLines: lines.filter((l) => l.status === 'DEGRADED').length,
-        stoppedLines: lines.filter((l) => l.status === 'STOPPED').length,
-        overallProgress: Number(((totalProduced / totalTarget) * 100).toFixed(1)),
-        totalProduced,
-        totalTarget,
-        activeBottlenecksCount: activeBottlenecks.length,
+        totalLines: formattedLines.length,
+        runningLines: formattedLines.filter((l) => l.operationalStatus === 'RUNNING').length,
+        degradedLines: formattedLines.filter((l) => l.operationalStatus === 'DEGRADED').length,
+        pausedLines: formattedLines.filter((l) => l.operationalStatus === 'PAUSED' || l.operationalStatus === 'STOPPED').length,
+        overallTargetPerHour: totalTarget,
+        overallActualPerHour: totalActual,
       },
-      lines,
-      allActiveBottlenecks: activeBottlenecks,
+      lines: formattedLines,
     };
   },
 });
 
 /**
  * adjustLineSpeed
- * Inputs: lineId: string, speedPercentage: number. Updates operational speed.
+ * Inputs: lineId: string, speedPercentage: number. Updates operational speed directly in Supabase DB.
  */
 export const adjustLineSpeed = defineTool({
   name: 'adjustLineSpeed',
-  description: 'Adjusts the operational speed percentage of a specified production line and computes the resulting units-per-hour output.',
+  description: 'Adjusts the operational speed percentage of a specified production line and updates Supabase DB.',
   parameters: z.object({
     lineId: z.string().describe('ID of the production line to adjust (e.g., "LINE-A1", "LINE-B2")'),
     speedPercentage: z
@@ -132,48 +160,68 @@ export const adjustLineSpeed = defineTool({
   }),
   execute: async ({ lineId, speedPercentage }: { lineId: string; speedPercentage: number }) => {
     const normalizedId = lineId.toUpperCase();
-    const line = mockProductionLines[normalizedId];
 
-    if (!line) {
+    // 1. Fetch current record from Supabase
+    const { data: existingRows, error: fetchErr } = await supabase
+      .from('production_lines')
+      .select('*')
+      .eq('line_id', normalizedId);
+
+    if (fetchErr || !existingRows || existingRows.length === 0) {
       return {
         success: false,
-        error: `Production line "${lineId}" not found. Available lines: ${Object.keys(mockProductionLines).join(', ')}`,
+        error: `Production line "${lineId}" not found in Supabase production_lines table.`,
       };
     }
 
-    const previousSpeed = line.lineSpeedUnitsPerHour;
-    const previousPercentage = line.speedPercentage;
-
-    // Update in-memory state
-    line.speedPercentage = speedPercentage;
-    line.lineSpeedUnitsPerHour = Math.round((line.nominalSpeedUnitsPerHour * speedPercentage) / 100);
-
+    const currentLine: ProductionLineRow = existingRows[0];
+    const newActualSpeed = Math.round((currentLine.target_units_per_hour * speedPercentage) / 100);
+    
+    let newStatus = currentLine.operational_status;
     if (speedPercentage === 0) {
-      line.status = 'STOPPED';
-    } else if (speedPercentage < 75 || line.bottlenecks.length > 1) {
-      line.status = 'DEGRADED';
+      newStatus = 'PAUSED';
+    } else if (speedPercentage < 75) {
+      newStatus = 'DEGRADED';
     } else {
-      line.status = 'RUNNING';
+      newStatus = 'RUNNING';
+    }
+
+    const updatedAt = new Date().toISOString();
+
+    // 2. Update Supabase DB using exact column names
+    const { data: updatedRows, error: updateErr } = await supabase
+      .from('production_lines')
+      .update({
+        actual_units_per_hour: newActualSpeed,
+        operational_status: newStatus,
+        updated_at: updatedAt,
+      })
+      .eq('line_id', normalizedId)
+      .select();
+
+    if (updateErr) {
+      console.error('❌ Supabase Update Error:', updateErr.message);
+      return {
+        success: false,
+        error: updateErr.message,
+      };
     }
 
     return {
       success: true,
-      timestamp: new Date().toISOString(),
-      message: `Production speed for ${line.lineName} (${line.lineId}) updated to ${speedPercentage}%.`,
+      timestamp: updatedAt,
+      message: `Production speed for ${currentLine.line_name} (${normalizedId}) updated to ${speedPercentage}%.`,
       adjustmentDetails: {
-        lineId: line.lineId,
-        lineName: line.lineName,
-        previousSpeedPercentage: previousPercentage,
-        newSpeedPercentage: speedPercentage,
-        previousUnitsPerHour: previousSpeed,
-        newUnitsPerHour: line.lineSpeedUnitsPerHour,
-        nominalUnitsPerHour: line.nominalSpeedUnitsPerHour,
-        newStatus: line.status,
-        estimatedHoursToCompleteBatch:
-          line.lineSpeedUnitsPerHour > 0
-            ? Number(((line.batchTarget - line.unitsProduced) / line.lineSpeedUnitsPerHour).toFixed(2))
-            : null,
+        lineId: normalizedId,
+        lineName: currentLine.line_name,
+        targetUnitsPerHour: currentLine.target_units_per_hour,
+        previousActualUnitsPerHour: currentLine.actual_units_per_hour,
+        newActualUnitsPerHour: newActualSpeed,
+        speedPercentage,
+        newOperationalStatus: newStatus,
+        updatedAt,
       },
     };
   },
 });
+

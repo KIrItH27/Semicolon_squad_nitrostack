@@ -36,13 +36,13 @@ async function runVerification() {
 
   // 5. Get Vendor Quotes
   console.log('\n--- 5. getVendorQuotes ---');
-  const quotes = await getVendorQuotes.execute({ partId: 'PART-SERVO-01' }, {} as any);
+  const quotes = await getVendorQuotes.execute({ partId: 'PART-SERVO-01', vendorCode: 'VEND-ROBO-01' }, {} as any);
   console.log(JSON.stringify(quotes, null, 2));
 
   // 6. Create Purchase Order
   console.log('\n--- 6. createPurchaseOrder ---');
   const poResult = await createPurchaseOrder.execute(
-    { partId: 'PART-SERVO-01', quantity: 10, vendorId: 'VEND-APEX' },
+    { partId: 'PO-2026-9003', totalAmountUSD: 4500.0, vendorCode: 'VEND-ROBO-01', costCenter: 'CC-PROD-MAINT' },
     {} as any
   );
   console.log(JSON.stringify(poResult, null, 2));
@@ -50,10 +50,11 @@ async function runVerification() {
   // 7. Evaluate Purchase Order
   console.log('\n--- 7. evaluatePurchaseOrder ---');
   const poEvaluation = await evaluatePurchaseOrder.execute(
-    { poId: 'PO-2026-1001', totalAmount: 2850.0 },
+    { poId: 'PO-2026-9003', totalAmount: 4500.0 },
     {} as any
   );
   console.log(JSON.stringify(poEvaluation, null, 2));
+
 
   // 8. Get Monthly Budget Forecast
   console.log('\n--- 8. getMonthlyBudgetForecast ---');

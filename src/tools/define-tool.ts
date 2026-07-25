@@ -1,3 +1,4 @@
+import { supabase } from '../db/supabase.js';
 import { Tool, z } from '@nitrostack/core';
 
 export interface DefineToolOptions<TParams extends z.ZodTypeAny = z.ZodTypeAny, TResult = any> {

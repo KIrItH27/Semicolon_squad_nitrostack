@@ -1,3 +1,4 @@
+import { supabase } from '../db/supabase.js';
 import { getProductionStatus, adjustLineSpeed } from './production.tools.js';
 import { checkStockLevels, reserveParts } from './inventory.tools.js';
 import { createPurchaseOrder, getVendorQuotes } from './procurement.tools.js';

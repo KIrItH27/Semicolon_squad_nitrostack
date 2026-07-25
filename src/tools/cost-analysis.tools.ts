@@ -1,3 +1,4 @@
+import { supabase } from '../db/supabase.js';
 import { z } from '@nitrostack/core';
 import { defineTool } from './define-tool.js';
 
@@ -32,13 +33,13 @@ const plantBudget: BudgetState = {
 
 /**
  * evaluatePurchaseOrder
- * Inputs: poId: string, totalAmount: number. Checks budget limits, ROI impact, and returns status ("APPROVED" | "REQUIRES_SUPERVISOR_APPROVAL" | "REJECTED") with financial justification.
+ * Inputs: poId: string, totalAmount: number. Checks budget limits, ROI impact, updates Supabase purchase_orders approval_status, and returns justification.
  */
 export const evaluatePurchaseOrder = defineTool({
   name: 'evaluatePurchaseOrder',
-  description: 'Evaluates a Purchase Order against departmental budget limits, financial authorization thresholds, and ROI impact, returning an approval status and justification.',
+  description: 'Evaluates a Purchase Order against departmental budget limits, financial authorization thresholds, and ROI impact, updating Supabase approval_status and returning justification.',
   parameters: z.object({
-    poId: z.string().describe('Purchase Order ID to evaluate (e.g., "PO-2026-1001")'),
+    poId: z.string().describe('Purchase Order ID or part_id in Supabase to evaluate (e.g., "PO-2026-9002")'),
     totalAmount: z.number().positive().describe('Total monetary amount of the purchase order in USD'),
   }),
   execute: async ({ poId, totalAmount }: { poId: string; totalAmount: number }) => {
@@ -69,6 +70,20 @@ export const evaluatePurchaseOrder = defineTool({
       justification = `Purchase Order ${poId} for $${totalAmount.toLocaleString()} exceeds maximum single-transaction authorization limit ($${plantBudget.approvalThresholds.supervisorApprovalLimitUSD.toLocaleString()}). Executive Director review required.`;
     }
 
+    // Attempt to update Supabase purchase_orders table using exact DB column names (approval_status, approved_at)
+    const approvedAt = status === 'APPROVED' ? new Date().toISOString() : null;
+    const { error: dbUpdateError } = await supabase
+      .from('purchase_orders')
+      .update({
+        approval_status: status,
+        approved_at: approvedAt,
+      })
+      .eq('part_id', poId.toUpperCase());
+
+    if (dbUpdateError) {
+      console.warn(`Note: Could not update Supabase PO status for ${poId}: ${dbUpdateError.message}`);
+    }
+
     return {
       success: true,
       timestamp: new Date().toISOString(),
@@ -93,6 +108,7 @@ export const evaluatePurchaseOrder = defineTool({
     };
   },
 });
+
 
 /**
  * getMonthlyBudgetForecast
