@@ -16,7 +16,7 @@ export class OrchestratorController {
     ],
   })
   async getSupervisorPrompt(args: Record<string, any>, ctx: ExecutionContext) {
-    const itemName = args.itemName || 'Milk';
+    const itemName = args.itemName || 'Ball-bearing';
     const machineId = args.machineId || 'MCH-212';
     const zoneId = args.zoneId || 'ZONE-C-WELDING';
 
@@ -25,12 +25,23 @@ export class OrchestratorController {
         role: 'user' as const,
         content: `You are the FactoryMind Master Orchestrator Agent supervising Inventory, Procurement, Plant Maintenance, and Safety Compliance.
 
-=== PHASE 1: INVENTORY & PROCUREMENT ORCHESTRATION ===
-- Target Item: ${itemName}
-1. Call 'check_stock' to evaluate current stock level of ${itemName}.
-2. If stock is below 5 units, call 'find_supplier' to search available options.
-3. Select the best supplier and call 'place_order' to restock up to 10 units.
+=== PHASE 1: SPARE PART INVENTORY & PROCUREMENT ===
 
+- Target Spare Part: ${itemName}
+
+1. Call 'check_stock' to determine the current inventory level of ${itemName}.
+2.Check the stock levels of all critical manufacturing spare parts defined in the manufacturing inventory rules.
+  Ignore any household or non-manufacturing items.
+3. If the available stock is below the minimum threshold (5 units), call 'find_supplier' to identify approved industrial suppliers.
+4. Compare supplier price and delivery time, then select the most suitable supplier.
+5. Call 'place_order' to replenish the inventory up to 10 units.
+6. Return a procurement summary including:
+   - Current stock
+   - Reorder status
+   - Selected supplier
+   - Unit price
+   - Expected delivery time
+   - Order quantity
 === PHASE 2: MACHINERY HEALTH & DISPATCH ORCHESTRATION ===
 - Target Machine: ${machineId}
 1. Call 'check_machine_health' or 'checkMachineHealth' for ${machineId}.
