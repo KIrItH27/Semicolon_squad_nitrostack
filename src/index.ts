@@ -1,51 +1,31 @@
-import { createServer, Tool, z } from '@nitrostack/core';
-import { personCTools } from './tools/index.js';
+import 'dotenv/config';
+import { McpApp, McpApplicationFactory } from '@nitrostack/core';
+import { AppModule } from './modules/app.module.js';
 
-// Resources
-import { procurementGovernanceResource } from './resources/procurement-governance.resource.js';
-import { maintenanceSlaResource } from './resources/maintenance-sla.resource.js';
-
-// Prompts
-import { automatedProcurementFlowPrompt } from './prompts/procurement-workflow.prompt.js';
-import { emergencyMaintenanceWorkflowPrompt } from './prompts/emergency-maintenance.prompt.js';
-
-const process = (globalThis as any).process;
-
-const server = createServer({
-  name: 'Final_Semicolon_Squad',
-  version: '1.0.0',
-  description: 'Factory Mind',
-});
-
-server.tool(
-  new Tool({
-    name: 'hello',
-    description: 'Say hello to someone',
-    inputSchema: z.object({
-      name: z.string().describe('The name to greet'),
-    }),
-    handler: async (input: { name: string }, context) => {
-      context.logger.info(`Greeting ${input.name}`);
-      return `Hello, ${input.name}! 👋`;
+@McpApp({
+  module: AppModule,
+  server: {
+    name: 'Final_Semicolon_Squad',
+    version: '1.0.0',
+  },
+  transport: {
+    type: 'http',
+    http: {
+      port: 3000,
+      host: '0.0.0.0',
+      basePath: '/mcp',
     },
-  })
-);
+  },
+})
+export class AppRoot {}
 
-// Register Person C Supply Chain Tools
-for (const tool of personCTools) {
-  server.tool(tool);
+async function bootstrap() {
+  const app = await McpApplicationFactory.create(AppRoot);
+  await app.start();
+  console.error('FactoryMind Server started successfully on port 3000!');
 }
 
-// Register Resources
-server.resource(procurementGovernanceResource);
-server.resource(maintenanceSlaResource);
-
-// Register Prompts
-server.prompt(automatedProcurementFlowPrompt);
-server.prompt(emergencyMaintenanceWorkflowPrompt);
-
-server.start().catch((error) => {
+bootstrap().catch((error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
-
