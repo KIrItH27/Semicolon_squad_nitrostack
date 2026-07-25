@@ -1,14 +1,18 @@
 import 'dotenv/config';
-import { 
-  ControllerDecorator as Controller, 
-  ToolDecorator as Tool, 
-  InitialTool, 
-  z, 
-  ExecutionContext 
+import {
+  ControllerDecorator as Controller,
+  ToolDecorator as Tool,
+  InitialTool,
+  z,
+  ExecutionContext
 } from '@nitrostack/core';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_PUBLISHABLE_KEY as string);
+// Changed SUPABASE_PUBLISHABLE_KEY to SUPABASE_ANON_KEY
+const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_ANON_KEY as string
+);
 
 @Controller()
 export class InventoryController {
@@ -22,32 +26,40 @@ export class InventoryController {
   @InitialTool()
   async checkStock(input: { itemName: string }, ctx: ExecutionContext) {
     ctx.logger.info(`Checking stock for ${input.itemName}`);
-    
-    // Use ilike for case-insensitive matching in Supabase
+
     const { data, error } = await supabase
       .from('inventory')
       .select('quantity, name')
       .ilike('name', input.itemName.trim())
       .maybeSingle();
-      
+
     if (error) {
-      ctx.logger.error(`Supabase error checking stock for ${input.itemName}: ${error.message}`);
-      return { 
-        itemName: input.itemName, 
-        quantity: 0, 
-        notice: `Database error: ${error.message}` 
+      ctx.logger.error(
+        `Supabase error checking stock for ${input.itemName}: ${error.message}`
+      );
+
+      return {
+        itemName: input.itemName,
+        quantity: 0,
+        notice: `Database error: ${error.message}`,
       };
     }
 
     if (!data) {
-      ctx.logger.info(`No item matching '${input.itemName}' found in inventory table.`);
-      return { 
-        itemName: input.itemName, 
-        quantity: 0, 
-        notice: `Item '${input.itemName}' not found in inventory table.` 
+      ctx.logger.info(
+        `No item matching '${input.itemName}' found in inventory table.`
+      );
+
+      return {
+        itemName: input.itemName,
+        quantity: 0,
+        notice: `Item '${input.itemName}' not found in inventory table.`,
       };
     }
-    
-    return { itemName: data.name, quantity: data.quantity };
+
+    return {
+      itemName: data.name,
+      quantity: data.quantity,
+    };
   }
 }

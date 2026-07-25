@@ -6,6 +6,7 @@ import { PolicyController } from './policy.controller.js';
 import { OrchestratorController } from './orchestrator.controller.js';
 import { MaintenanceController } from './maintenance.controller.js';
 import { SafetyController } from './safety.controller.js';
+import { PersonCController } from './personc.controller.js';
 
 @Module({
   name: 'AppModule',
@@ -18,6 +19,7 @@ import { SafetyController } from './safety.controller.js';
     OrchestratorController,
     MaintenanceController,
     SafetyController,
+    PersonCController,
   ],
 })
 export class AppModule {}
