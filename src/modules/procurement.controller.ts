@@ -8,26 +8,41 @@ import {
 } from '@nitrostack/core';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_PUBLISHABLE_KEY as string);
+const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || 'placeholder';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 @Controller()
 export class ProcurementController {
   @Tool({
     name: 'find_supplier',
-    description: 'Searches the supplier catalog for an item to find prices and delivery times.',
+    description: 'Searches the supplier catalog for an item or all items to find prices and delivery times.',
     inputSchema: z.object({
-      itemName: z.string().describe('The name of the item to search for'),
+      itemName: z.string().optional().describe('The name of the item to search for. Omit or leave empty to search all suppliers.'),
     }),
   })
-  async findSupplier(input: { itemName: string }, ctx: ExecutionContext) {
-    ctx.logger.info(`Searching suppliers for ${input.itemName}`);
-    const { data, error } = await supabase
+  async findSupplier(input: { itemName?: string }, ctx: ExecutionContext) {
+    const rawName = input?.itemName?.trim();
+    ctx.logger.info(`Searching suppliers for ${rawName || 'all items'}`);
+    
+    if (rawName) {
+      const { data, error } = await supabase
+        .from('supplier_catalog')
+        .select('item_name, supplier_name, price_per_unit, delivery_days')
+        .ilike('item_name', rawName);
+        
+      if (error) throw new Error(error.message);
+      if (data && data.length > 0) {
+        return { availableOptions: data };
+      }
+    }
+
+    const { data: allData, error: allError } = await supabase
       .from('supplier_catalog')
-      .select('supplier_name, price_per_unit, delivery_days')
-      .ilike('item_name', input.itemName.trim());
+      .select('item_name, supplier_name, price_per_unit, delivery_days');
       
-    if (error) throw new Error(error.message);
-    return { availableOptions: data };
+    if (allError) throw new Error(allError.message);
+    return { availableOptions: allData || [] };
   }
 
   @Tool({

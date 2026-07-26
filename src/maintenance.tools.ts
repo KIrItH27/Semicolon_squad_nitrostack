@@ -169,7 +169,7 @@ export async function scheduleMaintenanceLogic(input: any) {
   const machineId = parseMachineId(input);
   const maintenanceType = input?.maintenanceType || 'EMERGENCY';
   const priority = input?.priority || 'CRITICAL';
-  const recipientEmail = input?.recipientEmail || 'cb.ai.u4aid25043@cb.students.amrita.edu';
+  const recipientEmail = input?.recipientEmail || 'cb.ai.u4aid25023@cb.students.amrita.edu';
   const technician = input?.assignedTechnician || 'Alex Vance (Senior Maintenance Lead)';
   // 2. DAY/DATE ONLY (NO TIME)
   const scheduledDate = new Date(Date.now() + 86400000).toLocaleDateString('en-US', {

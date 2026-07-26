@@ -2,6 +2,8 @@ import 'dotenv/config';
 import { McpApp, McpApplicationFactory } from '@nitrostack/core';
 import { AppModule } from './modules/app.module.js';
 
+const port = Number(process.env.PORT) || 3000;
+
 @McpApp({
   module: AppModule,
   server: {
@@ -11,18 +13,18 @@ import { AppModule } from './modules/app.module.js';
   transport: {
     type: 'http',
     http: {
-      port: 3000,
+      port,
       host: '0.0.0.0',
-      basePath: '/mcp',
+      basePath: '/mcp'
     },
   },
 })
-export class AppRoot {}
+export class AppRoot { }
 
 async function bootstrap() {
   const app = await McpApplicationFactory.create(AppRoot);
   await app.start();
-  console.error('FactoryMind Server started successfully on port 3000!');
+  console.error(`FactoryMind Server started successfully on port ${port}!`);
 }
 
 bootstrap().catch((error) => {
