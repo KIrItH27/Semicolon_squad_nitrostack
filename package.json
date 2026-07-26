@@ -5,9 +5,9 @@
   "author": "Semicolon_Squad",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "npx tsx watch src/index.ts",
     "build": "tsc",
-    "start": "tsx src/index.ts"
+    "start": "npx tsx src/index.ts"
   },
   "dependencies": {
     "@nitrostack/core": "^1.0.14",
