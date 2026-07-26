@@ -1,4 +1,4 @@
-# 🏭 FactoryMind: Autonomous Industrial Plant Orchestration MCP Server
+# 🏭 GearMind: Autonomous Industrial Plant Orchestration MCP Server
 
 **FactoryMind** (by Semicolon Squad) is an autonomous multi-agent industrial supervisor platform built using the **NitroStack SDK** (Model Context Protocol).
 
