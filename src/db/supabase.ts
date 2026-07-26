@@ -1,5 +1,6 @@
 // src/db/supabase.ts
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 import 'dotenv/config';
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -9,4 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env file!');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  realtime: {
+    transport: WebSocket as any,
+  },
+});

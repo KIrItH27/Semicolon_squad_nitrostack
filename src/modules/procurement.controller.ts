@@ -1,16 +1,22 @@
 import 'dotenv/config';
-import { 
-  ControllerDecorator as Controller, 
-  ToolDecorator as Tool, 
-  z, 
+import {
+  ControllerDecorator as Controller,
+  ToolDecorator as Tool,
+  z,
   ExecutionContext,
   emitEvent
 } from '@nitrostack/core';
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 
 const supabase = createClient(
   process.env.SUPABASE_URL as string,
-  process.env.SUPABASE_ANON_KEY as string
+  process.env.SUPABASE_ANON_KEY as string,
+  {
+    realtime: {
+      transport: WebSocket as any,
+    },
+  }
 );
 
 @Controller()
@@ -28,7 +34,7 @@ export class ProcurementController {
       .from('supplier_catalog')
       .select('supplier_name, price_per_unit, delivery_days')
       .ilike('item_name', input.itemName.trim());
-      
+
     if (error) throw new Error(error.message);
     return { availableOptions: data };
   }
@@ -44,22 +50,22 @@ export class ProcurementController {
     }),
   })
   async placeOrder(
-    input: { itemName: string; supplierName: string; quantity: number; totalCost: number }, 
+    input: { itemName: string; supplierName: string; quantity: number; totalCost: number },
     ctx: ExecutionContext
   ) {
     ctx.logger.info(`Placing order for ${input.quantity} unit(s) of ${input.itemName} with ${input.supplierName}`);
-    
+
     // 1. Insert order record into order_history
     const { data: orderData, error: orderError } = await supabase
       .from('order_history')
-      .insert([{ 
-        item_name: input.itemName, 
-        supplier_name: input.supplierName, 
-        quantity_ordered: input.quantity, 
+      .insert([{
+        item_name: input.itemName,
+        supplier_name: input.supplierName,
+        quantity_ordered: input.quantity,
         total_cost: input.totalCost
       }])
       .select();
-      
+
     if (orderError) {
       ctx.logger.error(`Error inserting order history: ${orderError.message}`);
       throw new Error(`Order failed: ${orderError.message}`);
@@ -84,7 +90,7 @@ export class ProcurementController {
         .eq('id', existingItem.id)
         .select()
         .single();
-        
+
       if (updateError) {
         ctx.logger.error(`Failed to update inventory quantity: ${updateError.message}`);
       } else {
@@ -97,7 +103,7 @@ export class ProcurementController {
         .insert([{ name: input.itemName, quantity: input.quantity }])
         .select()
         .single();
-        
+
       if (insertError) {
         ctx.logger.error(`Failed to insert new item into inventory: ${insertError.message}`);
       } else {
@@ -114,9 +120,9 @@ export class ProcurementController {
       newStockLevel: updatedInventory?.quantity
     });
 
-    return { 
-      status: 'success', 
-      message: `Order placed with ${input.supplierName}. Inventory updated!`, 
+    return {
+      status: 'success',
+      message: `Order placed with ${input.supplierName}. Inventory updated!`,
       receipt: orderData,
       updatedInventory: updatedInventory || 'Inventory update attempted'
     };

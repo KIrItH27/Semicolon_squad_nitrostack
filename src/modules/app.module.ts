@@ -1,25 +1,27 @@
 import { Module } from '@nitrostack/core';
 import { AppController } from './app.controller.js';
-import { InventoryController } from './inventory.controller.js';
+//import { InventoryController } from './inventory.controller.js';
 import { ProcurementController } from './procurement.controller.js';
 import { PolicyController } from './policy.controller.js';
 import { OrchestratorController } from './orchestrator.controller.js';
 import { MaintenanceController } from './maintenance.controller.js';
 import { SafetyController } from './safety.controller.js';
 import { PersonCController } from './personc.controller.js';
+import { QualityController } from './quality.controller.js';
 
 @Module({
   name: 'AppModule',
   description: 'FactoryMind Root Module combining Inventory, Procurement, Policy, Maintenance, Safety, and System tools',
   controllers: [
     AppController,
-    InventoryController,
+    //InventoryController,
     ProcurementController,
     PolicyController,
     OrchestratorController,
     MaintenanceController,
     SafetyController,
     PersonCController,
+    QualityController,
   ],
 })
 export class AppModule {}
