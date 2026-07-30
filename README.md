@@ -1,6 +1,6 @@
 # 🏭 GearMind: Autonomous Industrial Plant Orchestration MCP Server
 
-**FactoryMind** (by Semicolon Squad) is an autonomous multi-agent industrial supervisor platform built using the **NitroStack SDK** (Model Context Protocol).
+**GearMind** (by Semicolon Squad) is an autonomous multi-agent industrial supervisor platform built using the **NitroStack SDK** (Model Context Protocol).
 
 It connects AI models (such as NitroStudio, ChatGPT, or Claude) directly to plant infrastructure, database storage (Supabase), and communication services (Gmail Nodemailer) to handle end-to-end inventory management, predictive maintenance, plant safety, quality control, and automated restocking.
 
